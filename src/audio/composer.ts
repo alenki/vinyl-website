@@ -422,6 +422,8 @@ function shaker(ctx: Ctx, b: Buses, k: Kit, t: number, vel: number) {
 export interface TrackDef {
   id: string
   title: string
+  /** The year the song was created — shown in the masthead alongside the title. */
+  year: string
   side: string
   tempo: string
   blurb: string
@@ -642,6 +644,7 @@ export const TRACKS: TrackDef[] = [
   {
     id: 'straight-outta-compton',
     title: 'Straight Outta Compton',
+    year: '1988',
     side: 'A1',
     tempo: 'N.W.A',
     blurb: 'N.W.A — Straight Outta Compton, 1988.',
@@ -652,6 +655,7 @@ export const TRACKS: TrackDef[] = [
   {
     id: 'cream',
     title: 'C.R.E.A.M.',
+    year: '1993',
     side: 'A2',
     tempo: 'Wu-Tang Clan',
     blurb: 'Wu-Tang Clan — Enter the Wu-Tang (36 Chambers), 1993.',
@@ -662,6 +666,7 @@ export const TRACKS: TrackDef[] = [
   {
     id: '8-ball-remix',
     title: '8 Ball (Remix)',
+    year: '1988',
     side: 'B1',
     tempo: 'Eazy-E',
     blurb: 'N.W.A / Eazy-E — 8 Ball (Remix).',

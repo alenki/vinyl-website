@@ -104,9 +104,9 @@ export default function App() {
       >
         {/* ————— quiet masthead ————— */}
         <header className="masthead">
-          <h1 className="album">{FICTION.album}</h1>
+          <h1 className="album">ESOES &amp; ÉLI</h1>
           <p className="by">
-            {FICTION.artist} <span className="sep">·</span> {FICTION.year}
+            {current.title} <span className="sep">·</span> {current.year}
           </p>
         </header>
 
