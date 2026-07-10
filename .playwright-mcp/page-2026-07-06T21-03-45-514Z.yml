@@ -1,0 +1,73 @@
+- generic [ref=f2e2]:
+  - generic [ref=f2e4]:
+    - generic:
+      - generic: SLOW COAST SLOW COAST SLOW COAST
+      - generic: The Sonny Marrow Quartet — recorded 1962 at MERIDIAN GRAMOPHONE, Antwerp.
+      - generic [ref=f2e5]:
+        - generic [ref=f2e6]: MER-4017
+        - generic [ref=f2e7]: DEEP GROOVE · FIRST PRESSING
+    - generic: SONNY MARROW SONNY MARROW SONNY MARROW
+    - generic [ref=f2e8]:
+      - generic [ref=f2e9]:
+        - generic [ref=f2e12]: LEFT
+        - generic [ref=f2e13]: PEAK
+      - generic [ref=f2e14]:
+        - generic [ref=f2e17]: RIGHT
+        - generic [ref=f2e18]: PEAK
+    - generic [ref=f2e19]:
+      - generic [ref=f2e23]:
+        - img [ref=f2e29]:
+          - generic [ref=f2e35]: MERIDIAN GRAMOPHONE
+          - generic [ref=f2e36]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=f2e37]: SLOW COAST
+          - generic [ref=f2e38]: THE SONNY MARROW QUARTET
+          - generic [ref=f2e39]: 1. SLOW COAST (MARROW)
+          - generic [ref=f2e40]: 2. CROSSTOWN LOCAL (MARROW–LAVEAU)
+          - generic [ref=f2e41]: MER-4017
+          - generic [ref=f2e42]: 33⅓ RPM
+          - generic [ref=f2e43]: SIDE ONE
+          - generic [ref=f2e44]: ANTWERP · 1962 · STEREO
+        - img [ref=f2e53]:
+          - generic [ref=f2e59]: MERIDIAN GRAMOPHONE
+          - generic [ref=f2e60]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=f2e61]: SLOW COAST
+          - generic [ref=f2e62]: THE SONNY MARROW QUARTET
+          - generic [ref=f2e63]: 1. VELVET STATIC (MARROW)
+          - generic [ref=f2e64]: A WALTZ · RECORDED AFTER HOURS
+          - generic [ref=f2e65]: MER-4017
+          - generic [ref=f2e66]: 33⅓ RPM
+          - generic [ref=f2e67]: SIDE TWO
+          - generic [ref=f2e68]: ANTWERP · 1962 · STEREO
+      - generic:
+        - generic:
+          - generic:
+            - img
+    - generic [ref=f2e72]:
+      - button "motor on/off" [ref=f2e73] [cursor=pointer]: STOP
+      - generic [ref=f2e75]: SPEED 33⅓ RPM · LOCKED TIME 0:51 / 0:53 GRADE M- · DUST
+    - generic [ref=f2e76]:
+      - generic [ref=f2e77]:
+        - generic [ref=f2e78]: SIDE TWO · SIDE TWO
+        - generic [ref=f2e79]: MER-4017
+      - button "A1 Slow Coast 74 BPM" [ref=f2e80] [cursor=pointer]:
+        - generic [ref=f2e81]: A1
+        - generic "The title cut. Taken at a crawl — one take, windows open, tape left running." [ref=f2e82]: Slow Coast
+        - generic [ref=f2e83]: 74 BPM
+      - button "A2 Crosstown Local 108 BPM" [ref=f2e104] [cursor=pointer]:
+        - generic [ref=f2e85]: A2
+        - generic "Uptempo. The rhythm section chasing the last train out of the yards." [ref=f2e86]: Crosstown Local
+        - generic [ref=f2e87]: 108 BPM
+      - button "B1 Velvet Static 84 BPM · waltz" [active] [ref=f2e88] [cursor=pointer]:
+        - generic [ref=f2e89]: B1
+        - generic "A slow waltz for the last two dancers in the room. Vibraphone, brushes, dust." [ref=f2e90]: Velvet Static
+        - generic [ref=f2e91]: 84 BPM · waltz
+      - generic [ref=f2e92]:
+        - generic [ref=f2e93] [cursor=pointer]: FLIP → SIDE ONE
+        - generic [ref=f2e94]: "1962"
+      - generic [ref=f2e95]:
+        - generic [ref=f2e96]: S. MARROW — tenor saxophone
+        - generic [ref=f2e97]: E. LAVEAU — piano & celeste
+        - generic [ref=f2e98]: R. TEN BRINK — bass
+        - generic [ref=f2e99]: A. OKONKWO — drums, brushes
+    - generic [ref=f2e105]: CUTTING LACQUER…
+  - generic [ref=f2e102]: LONG PLAYING · MICROGROOVE · 33⅓ RPM · MERIDIAN GRAMOPHONE COMPANY · ANTWERP · HIGH FIDELITY · UNBREAKABLE · LONG PLAYING · MICROGROOVE · 33⅓ RPM · MERIDIAN GRAMOPHONE COMPANY · ANTWERP · HIGH FIDELITY · UNBREAKABLE ·

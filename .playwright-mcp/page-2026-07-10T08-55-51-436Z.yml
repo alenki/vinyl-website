@@ -1,0 +1,58 @@
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic:
+      - heading "SLOW COAST" [level=1]
+      - paragraph: SONNY MARROW · 1962
+    - slider "Record. Drag to scratch; arrow keys to nudge; space to start or stop." [ref=e6]:
+      - generic [ref=e9]:
+        - img [ref=e15]:
+          - generic [ref=e21]: MERIDIAN GRAMOPHONE
+          - generic [ref=e22]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=e23]: SLOW COAST
+          - generic [ref=e24]: THE SONNY MARROW QUARTET
+          - generic [ref=e25]: 1. SLOW COAST (MARROW)
+          - generic [ref=e26]: 2. CROSSTOWN LOCAL (MARROW–LAVEAU)
+          - generic [ref=e27]: MER-4017
+          - generic [ref=e28]: 33⅓ RPM
+          - generic [ref=e29]: SIDE ONE
+          - generic [ref=e30]: ANTWERP · 1962 · STEREO
+        - img [ref=e39]:
+          - generic [ref=e45]: MERIDIAN GRAMOPHONE
+          - generic [ref=e46]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=e47]: SLOW COAST
+          - generic [ref=e48]: THE SONNY MARROW QUARTET
+          - generic [ref=e49]: 1. VELVET STATIC (MARROW)
+          - generic [ref=e50]: A WALTZ · RECORDED AFTER HOURS
+          - generic [ref=e51]: MER-4017
+          - generic [ref=e52]: 33⅓ RPM
+          - generic [ref=e53]: SIDE TWO
+          - generic [ref=e54]: ANTWERP · 1962 · STEREO
+    - generic [ref=e58]:
+      - generic [ref=e60]:
+        - button "Play" [ref=e61] [cursor=pointer]
+        - generic [ref=e64]:
+          - generic [ref=e65]: Straight Outta Compton
+          - generic [ref=e66]:
+            - text: 0:00
+            - generic [ref=e67]: / 4:19
+      - list [ref=e68]:
+        - listitem [ref=e69]:
+          - button "A1 Straight Outta Compton N.W.A" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: A1
+            - generic "N.W.A — Straight Outta Compton, 1988." [ref=e72]: Straight Outta Compton
+            - generic [ref=e73]: N.W.A
+        - listitem [ref=e74]:
+          - button "A2 C.R.E.A.M. Wu-Tang Clan" [ref=e75] [cursor=pointer]:
+            - generic [ref=e76]: A2
+            - generic "Wu-Tang Clan — Enter the Wu-Tang (36 Chambers), 1993." [ref=e77]: C.R.E.A.M.
+            - generic [ref=e78]: Wu-Tang Clan
+        - listitem [ref=e79]:
+          - button "B1 8 Ball (Remix) Eazy-E" [ref=e80] [cursor=pointer]:
+            - generic [ref=e81]: B1
+            - generic "N.W.A / Eazy-E — 8 Ball (Remix)." [ref=e82]: 8 Ball (Remix)
+            - generic [ref=e83]: Eazy-E
+      - button "flip to side two" [ref=e84] [cursor=pointer]
+  - button [disabled]:
+    - generic: SLOW COAST
+    - generic: The Sonny Marrow Quartet
+    - generic: play
