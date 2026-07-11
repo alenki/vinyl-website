@@ -67,6 +67,7 @@ export function useTurntable(
   const phaseRef = useRef<Phase>('boot')
   const sideRef = useRef<'A' | 'B'>('A')
   const motorRef = useRef(false)
+  const endedRef = useRef(false) // the needle is resting in the run-out groove
   const lockedRef = useRef(false)
   const lockingRef = useRef(false)
   const rpmShownRef = useRef(0)
@@ -86,26 +87,33 @@ export function useTurntable(
     setState((s) => ({ ...s, ...p }))
   }, [])
 
-  // ————— audio position → progress (tonearm + index) —————
+  // audio position → progress (tonearm + index)
   useEffect(() => {
     deck.onPosition = (seconds, dur) => {
       if (dur > 0.1) {
         durationRef.current = dur
         progressRef.current = Math.min(1, seconds / dur)
+        // scratched well clear of the run-out: playing resumes from here
+        if (endedRef.current && seconds < dur - 0.5) endedRef.current = false
       }
     }
-    // The record loops seamlessly, so there is no natural end.
-    deck.onEnded = null
+    // the song reached the run-out: cut the motor, keep the needle in the groove
+    deck.onEnded = () => {
+      endedRef.current = true
+      motorRef.current = false
+      platter.motorOn = false
+      setPartial({ motorOn: false })
+    }
     return () => {
       deck.onPosition = null
       deck.onEnded = null
     }
-  }, [])
+  }, [platter, setPartial])
 
   const armAngle = useRef(90)
   const progAccum = useRef(0)
 
-  // ————— the loop —————
+  // the loop
   const frame = useCallback(
     (t: number) => {
       raf.current = requestAnimationFrame(frame)
@@ -188,7 +196,7 @@ export function useTurntable(
         })
       }
 
-      // ————— wear + dust —————
+      // wear + dust
       if (platter.scratching && Math.abs(platter.audioRate()) > 1.4) {
         wear.current = Math.min(3, wear.current + dt * 0.25)
         const cond = CONDITION_STEPS[Math.min(3, Math.floor(wear.current))]
@@ -215,7 +223,7 @@ export function useTurntable(
     return () => cancelAnimationFrame(raf.current)
   }, [frame])
 
-  // ————— pointer geometry —————
+  // pointer geometry
   const pointerAngle = useCallback((clientX: number, clientY: number) => {
     return Math.atan2(clientY - center.current.y, clientX - center.current.x)
   }, [])
@@ -317,7 +325,7 @@ export function useTurntable(
     [platter, markInteracted],
   )
 
-  // ————— public controls —————
+  // public controls
 
   const startBoot = useCallback(async () => {
     setPartial({ phase: 'pressing' })
@@ -337,6 +345,12 @@ export function useTurntable(
     // START/STOP is the motor. The stylus stays in the groove either way — when
     // the motor stops, the record coasts to a halt and the music slows with it.
     const on = !motorRef.current
+    // restarting a finished record puts the needle back at the lead-in
+    if (on && endedRef.current) {
+      endedRef.current = false
+      progressRef.current = 0
+      deck.seekToSeconds(0)
+    }
     motorRef.current = on
     platter.motorOn = on
     deck.playClick()
@@ -353,6 +367,7 @@ export function useTurntable(
       setPartial({ phase: 'pressing', trackIndex: index })
       phaseRef.current = 'pressing'
       progressRef.current = 0
+      endedRef.current = false
       // flip the record if the side changed
       if (targetSide !== sideRef.current) {
         sideRef.current = targetSide

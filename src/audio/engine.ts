@@ -84,7 +84,7 @@ export class TurntableAudio {
     worklet.connect(scratchFilter, 0)
     scratchFilter.connect(needleGain)
 
-    // ————— warmth chain —————
+    // warmth chain
     const lowShelf = ctx.createBiquadFilter()
     lowShelf.type = 'lowshelf'
     lowShelf.frequency.value = 110
@@ -174,7 +174,8 @@ export class TurntableAudio {
     buffer.copyFromChannel(left, 0)
     // mono files feed the same channel to both sides
     buffer.copyFromChannel(right, buffer.numberOfChannels > 1 ? 1 : 0)
-    this.worklet.port.postMessage({ type: 'load', left, right }, [left.buffer, right.buffer])
+    // synthesized lacquers are seamless loops; a recorded song ends at the run-out
+    this.worklet.port.postMessage({ type: 'load', left, right, loop: !def.src }, [left.buffer, right.buffer])
     return true
   }
 

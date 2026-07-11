@@ -1,8 +1,6 @@
-/* ————————————————————————————————————————————————————————————————
-   SLOW COAST — a quiet record on warm paper.
+/* ГАСНЕТ СВЕТ: a quiet record on warm paper.
    One object, a lot of air. The record and tonearm carry the page;
-   everything else whispers.
-   ———————————————————————————————————————————————————————————————— */
+   everything else whispers. */
 
 :root {
   --cream: #f4efe3; /* page + label spindle + B-side ink */
@@ -14,9 +12,11 @@
   --accent: #8a5f1d; /* deep warm ochre — AA on cream (4.9:1); also the stylus */
   --line: rgba(30, 26, 21, 0.13);
 
-  --font-display: 'League Gothic', 'Arial Narrow', sans-serif; /* record label only */
-  --font-serif: 'Newsreader', Georgia, serif;
-  --font-mono: 'Courier Prime', 'Courier New', monospace;
+  /* Cyrillic-capable stand-ins for the original Latin-only trio: Oswald for
+     League Gothic, Prata for Newsreader, PT Mono for Courier Prime. */
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif; /* record label only */
+  --font-serif: 'Prata', Georgia, serif;
+  --font-mono: 'PT Mono', 'Courier New', monospace;
   --ease: cubic-bezier(0.4, 0, 0, 1);
 }
 
@@ -75,7 +75,7 @@ button {
   border: 0;
 }
 
-/* ————— paper ————— */
+/* paper */
 
 .paper {
   position: fixed;
@@ -100,7 +100,7 @@ button {
   transform: translateY(4px);
 }
 
-/* ————— masthead ————— */
+/* masthead */
 
 .masthead {
   text-align: center;
@@ -128,7 +128,7 @@ button {
   margin: 0 2px;
 }
 
-/* ————— deck ————— */
+/* deck */
 
 .deck {
   position: relative;
@@ -350,7 +350,7 @@ button {
   opacity: 1.25;
 }
 
-/* ————— scratch hint ————— */
+/* scratch hint */
 
 .scratch-hint {
   position: absolute;
@@ -370,7 +370,7 @@ button {
   animation: fadeIn 0.5s var(--ease) both;
 }
 
-/* ————— tonearm ————— */
+/* tonearm */
 
 .arm-assembly {
   position: absolute;
@@ -407,7 +407,7 @@ button {
   opacity: 0.09;
 }
 
-/* ————— console ————— */
+/* console */
 
 .console {
   flex: none;
@@ -539,7 +539,7 @@ button {
   color: var(--ink);
 }
 
-/* ————— entry sleeve ————— */
+/* entry sleeve */
 
 .coldboot {
   position: fixed;
@@ -596,7 +596,7 @@ button {
   outline-offset: -8px;
 }
 
-/* ————— motion ————— */
+/* motion */
 
 @keyframes rise {
   from {
@@ -639,7 +639,7 @@ button {
   }
 }
 
-/* ————— smaller stages ————— */
+/* smaller stages */
 
 @media (max-width: 680px) {
   .deck {

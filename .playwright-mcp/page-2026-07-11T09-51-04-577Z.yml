@@ -1,0 +1,48 @@
+- generic [ref=e2]:
+  - main [ref=e4]:
+    - generic:
+      - heading "ESOES & ÉLI" [level=1]
+      - paragraph: Гаснет Свет · 2026
+    - slider "Record. Drag to scratch; arrow keys to nudge; space to start or stop." [ref=e6]:
+      - generic [ref=e9]:
+        - img [ref=e15]:
+          - generic [ref=e21]: MERIDIAN GRAMOPHONE
+          - generic [ref=e22]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=e23]: SLOW COAST
+          - generic [ref=e24]: THE SONNY MARROW QUARTET
+          - generic [ref=e25]: 1. SLOW COAST (MARROW)
+          - generic [ref=e26]: 2. CROSSTOWN LOCAL (MARROW–LAVEAU)
+          - generic [ref=e27]: MER-4017
+          - generic [ref=e28]: 33⅓ RPM
+          - generic [ref=e29]: SIDE ONE
+          - generic [ref=e30]: ANTWERP · 1962 · STEREO
+        - img [ref=e39]:
+          - generic [ref=e45]: MERIDIAN GRAMOPHONE
+          - generic [ref=e46]: LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          - generic [ref=e47]: SLOW COAST
+          - generic [ref=e48]: THE SONNY MARROW QUARTET
+          - generic [ref=e49]: 1. VELVET STATIC (MARROW)
+          - generic [ref=e50]: A WALTZ · RECORDED AFTER HOURS
+          - generic [ref=e51]: MER-4017
+          - generic [ref=e52]: 33⅓ RPM
+          - generic [ref=e53]: SIDE TWO
+          - generic [ref=e54]: ANTWERP · 1962 · STEREO
+    - generic [ref=e58]:
+      - generic [ref=e60]:
+        - button "Stop" [pressed] [ref=e82] [cursor=pointer]
+        - generic [ref=e64]:
+          - generic [ref=e65]: Гаснет Свет
+          - generic [ref=e66]:
+            - text: 0:00
+            - generic [ref=e67]: / 2:56
+      - list [ref=e68]:
+        - listitem [ref=e69]:
+          - button "A1 Гаснет Свет 2:56" [ref=e70] [cursor=pointer]:
+            - generic [ref=e71]: A1
+            - generic "ESOES & ELI — Гаснет Свет." [ref=e72]: Гаснет Свет
+            - generic [ref=e73]: 2:56
+    - generic [ref=e74]: Now playing Гаснет Свет, 33⅓ RPM
+  - button [disabled]:
+    - generic: SLOW COAST
+    - generic: The Sonny Marrow Quartet
+    - generic: play

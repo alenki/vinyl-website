@@ -102,7 +102,7 @@ export default function App() {
         onPointerUp={tt.endGrab}
         onPointerCancel={tt.endGrab}
       >
-        {/* ————— quiet masthead ————— */}
+        {/* quiet masthead */}
         <header className="masthead">
           <h1 className="album">ESOES &amp; ÉLI</h1>
           <p className="by">
@@ -110,18 +110,18 @@ export default function App() {
           </p>
         </header>
 
-        {/* ————— the deck ————— */}
+        {/* the deck */}
         <div className="deck">
           <div
             ref={zone}
             className="vinyl-zone"
             role="slider"
             tabIndex={0}
-            aria-label="Record. Drag to scratch; arrow keys to nudge; space to start or stop."
+            aria-label="Пластинка. Тяните, чтобы скретчить; стрелки подталкивают; пробел запускает и останавливает."
             aria-valuemin={-120}
             aria-valuemax={120}
             aria-valuenow={Math.round(state.rpm)}
-            aria-valuetext={`${Math.abs(state.rpm).toFixed(0)} RPM`}
+            aria-valuetext={`${Math.abs(state.rpm).toFixed(0)} об/мин`}
             onPointerDown={tt.onPointerDown}
             onLostPointerCapture={tt.endGrab}
             onKeyDown={onZoneKeyDown}
@@ -143,7 +143,7 @@ export default function App() {
             </div>
             {state.showHint && (
               <div className="scratch-hint" aria-hidden="true">
-                drag to scratch
+                потяните, чтобы скретчить
               </div>
             )}
           </div>
@@ -153,7 +153,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* ————— console ————— */}
+        {/* console */}
         <footer className="console">
           <div className="progress" aria-hidden="true">
             <span style={{ transform: `scaleX(${Math.max(0, Math.min(1, state.progress))})` }} />
@@ -164,7 +164,7 @@ export default function App() {
               className="play"
               onClick={tt.toggleMotor}
               aria-pressed={state.motorOn}
-              aria-label={state.motorOn ? 'Stop' : 'Play'}
+              aria-label={state.motorOn ? 'Стоп' : 'Пуск'}
             >
               {state.motorOn ? <StopGlyph /> : <PlayGlyph />}
             </button>
@@ -194,18 +194,20 @@ export default function App() {
             ))}
           </ol>
 
-          <button className="flip" onClick={tt.flipRecord}>
-            flip to side {state.side === 'A' ? 'two' : 'one'}
-          </button>
+          {TRACKS.some((t) => t.side.startsWith('B')) && (
+            <button className="flip" onClick={tt.flipRecord}>
+              перевернуть на {state.side === 'A' ? 'вторую' : 'первую'} сторону
+            </button>
+          )}
         </footer>
 
         {/* screen-reader announcement of transport state */}
         <div className="sr-only" aria-live="polite">
-          {playing ? `Now playing ${current.title}, 33⅓ RPM` : state.phase === 'playing' ? 'Stopped' : ''}
+          {playing ? `Сейчас играет «${current.title}», 33⅓ об/мин` : state.phase === 'playing' ? 'Остановлено' : ''}
         </div>
       </main>
 
-      {/* ————— entry sleeve (fades away, revealing the deck) ————— */}
+      {/* entry sleeve (fades away, revealing the deck) */}
       <button
         type="button"
         className={`coldboot${booting ? '' : ' lifted'}`}
@@ -213,12 +215,12 @@ export default function App() {
         disabled={!booting}
         aria-hidden={!booting}
         autoFocus
-        aria-label={`Play ${FICTION.album} by ${FICTION.artist}`}
+        aria-label={`Слушать «${FICTION.album}», ${FICTION.artist}`}
       >
         <span className="cb-album">{FICTION.album}</span>
         <span className="cb-by">{FICTION.artistFull}</span>
         <span className="cb-play">
-          <PlayGlyph /> play
+          <PlayGlyph /> слушать
         </span>
       </button>
     </>

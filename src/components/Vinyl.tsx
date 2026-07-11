@@ -44,7 +44,7 @@ function LabelSVG({ side }: { side: 'A' | 'B' }) {
       </text>
       <text fontFamily="var(--font-mono)" fontSize="7" letterSpacing="1.8" fill={accent}>
         <textPath href={`#arc-bot-${side}`} startOffset="50%" textAnchor="middle">
-          LONG PLAYING · MICROGROOVE · HIGH FIDELITY
+          ДОЛГОИГРАЮЩАЯ ПЛАСТИНКА · МИКРОГРУВ
         </textPath>
       </text>
 
@@ -58,7 +58,7 @@ function LabelSVG({ side }: { side: 'A' | 'B' }) {
         letterSpacing="1"
         fill={ink}
       >
-        {FICTION.album}
+        {FICTION.album.toUpperCase()}
       </text>
       <text x="100" y="74" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.4" letterSpacing="1.1" fill={ink}>
         {FICTION.artistFull.toUpperCase()}
@@ -67,19 +67,19 @@ function LabelSVG({ side }: { side: 'A' | 'B' }) {
       {isA ? (
         <>
           <text x="100" y="132" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.6" letterSpacing="0.8" fill={ink}>
-            1. SLOW COAST (MARROW)
+            1. ГАСНЕТ СВЕТ (2:56)
           </text>
-          <text x="100" y="141" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.6" letterSpacing="0.8" fill={ink}>
-            2. CROSSTOWN LOCAL (MARROW–LAVEAU)
+          <text x="100" y="141" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.4" letterSpacing="0.8" fill={accent}>
+            ЗАПИСЬ {FICTION.year} ГОДА
           </text>
         </>
       ) : (
         <>
           <text x="100" y="132" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.6" letterSpacing="0.8" fill={ink}>
-            1. VELVET STATIC (MARROW)
+            БЕЗ ЗАПИСИ
           </text>
           <text x="100" y="141" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.4" letterSpacing="0.8" fill={accent}>
-            A WALTZ · RECORDED AFTER HOURS
+            ОБЕРЕГАЙТЕ ОТ ПЫЛИ И ТЕПЛА
           </text>
         </>
       )}
@@ -89,13 +89,13 @@ function LabelSVG({ side }: { side: 'A' | 'B' }) {
         {FICTION.catNo}
       </text>
       <text x="157" y="99" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.2" fill={ink}>
-        33⅓ RPM
+        33⅓ ОБ/МИН
       </text>
       <text x="157" y="107" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="6.2" fontWeight="700" fill={ink}>
-        SIDE {isA ? 'ONE' : 'TWO'}
+        СТОРОНА {isA ? '1' : '2'}
       </text>
       <text x="100" y="156" textAnchor="middle" fontFamily="var(--font-mono)" fontSize="5.6" letterSpacing="1.4" fill={accent}>
-        {FICTION.labelCity} · {FICTION.year} · STEREO
+        {FICTION.labelCity} · {FICTION.year} · СТЕРЕО
       </text>
 
       {/* spindle */}

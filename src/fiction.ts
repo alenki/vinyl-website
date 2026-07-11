@@ -1,23 +1,17 @@
 /**
- * The pressing. One fictional record, treated with complete seriousness:
- * a 1962 deep-groove LP on a small Belgian jazz label.
+ * The pressing. One record, treated with complete seriousness:
+ * «Гаснет Свет» by ESOES & ÉLI — a deep-groove stereo pressing
+ * on the Meridian Gramophone label, Moscow.
  */
 export const FICTION = {
-  artist: 'SONNY MARROW',
-  artistFull: 'The Sonny Marrow Quartet',
-  album: 'SLOW COAST',
-  label: 'MERIDIAN GRAMOPHONE',
-  labelCity: 'ANTWERP',
-  catNo: 'MER-4017',
-  year: '1962',
-  pressing: 'DEEP GROOVE · FIRST PRESSING',
-  personnel: [
-    'S. MARROW — tenor saxophone',
-    'E. LAVEAU — piano & celeste',
-    'R. TEN BRINK — bass',
-    'A. OKONKWO — drums, brushes',
-  ],
+  artist: 'ESOES & ÉLI',
+  artistFull: 'ESOES & ÉLI',
+  album: 'Гаснет Свет',
+  label: 'МЕРИДИАН ГРАМОФОН',
+  labelCity: 'МОСКВА',
+  catNo: 'МЕР-4017',
+  year: '2026',
+  pressing: 'ГЛУБОКАЯ КАНАВКА · ПЕРВОЕ ИЗДАНИЕ',
   linerNote:
-    'Recorded in one evening at the Meridian studio above the harbor, ' +
-    'with the windows open and the tape left running between takes.',
+    'Записано одним вечером; плёнку не останавливали между дублями.',
 } as const

@@ -27,6 +27,9 @@ class TurntableProcessor extends AudioWorkletProcessor {
     this.length = 0
     this.pos = 0
     this.wraps = 0 // net loop count, so the reported playhead is monotonic-ish
+    this.loop = true // seamless loops wrap; recorded songs pin at the run-out
+    this.endPinned = false
+    this.endedFlag = false
     this.targetRate = 0
     this.rate = 0
     // one-pole rate smoothing, tau = 12 ms
@@ -54,6 +57,8 @@ class TurntableProcessor extends AudioWorkletProcessor {
       const d = e.data
       switch (d.type) {
         case 'load':
+          this.loop = d.loop !== false
+          this.endPinned = false
           if (this.left) {
             // a groove is already playing: stage the swap and fade the old out
             this.pendingLeft = d.left
@@ -73,6 +78,7 @@ class TurntableProcessor extends AudioWorkletProcessor {
           if (this.length > 0) {
             this.ramp = 0
             this.pos = ((d.frame % this.length) + this.length) % this.length
+            this.endPinned = false
           }
           break
         case 'rate':
@@ -104,7 +110,7 @@ class TurntableProcessor extends AudioWorkletProcessor {
       const r = this.rate
       const speed = Math.abs(r)
 
-      // ————— the record —————
+      // the record
       // The buffer is a seamless loop (musical tails folded into the head), so
       // the playhead wraps modulo length in either direction. There is no
       // "end" — a record on a running turntable plays until you lift the arm.
@@ -113,10 +119,26 @@ class TurntableProcessor extends AudioWorkletProcessor {
       if (this.left && this.length > 1) {
         const len = this.length
         this.pos += r
-        if (this.pos >= len) this.pos -= len
-        else if (this.pos < 0) this.pos += len
-        // guard against a huge single-frame jump (e.g. a violent flick)
-        if (this.pos >= len || this.pos < 0) this.pos = ((this.pos % len) + len) % len
+        if (this.loop) {
+          if (this.pos >= len) this.pos -= len
+          else if (this.pos < 0) this.pos += len
+          // guard against a huge single-frame jump (e.g. a violent flick)
+          if (this.pos >= len || this.pos < 0) this.pos = ((this.pos % len) + len) % len
+        } else {
+          // a recorded song: the needle reaches the run-out and stays there.
+          // Scratching backward off the pin replays the tail; playing forward
+          // to the end again re-arms the 'ended' notification.
+          if (this.pos >= len - 1) {
+            this.pos = len - 1
+            if (!this.endPinned) {
+              this.endPinned = true
+              this.endedFlag = true
+            }
+          } else {
+            if (this.pos < 0) this.pos = 0
+            this.endPinned = false
+          }
+        }
         const i0 = this.pos | 0
         const i1 = i0 + 1 >= len ? 0 : i0 + 1
         const frac = this.pos - i0
@@ -155,7 +177,7 @@ class TurntableProcessor extends AudioWorkletProcessor {
       dr.y1 = y
       R[i] = y
 
-      // ————— the medium —————
+      // the medium
       if (crackle) {
         // platter phase advances with rate even when pos is pinned (run-out)
         const prevPhase = this.revPhase
@@ -204,6 +226,10 @@ class TurntableProcessor extends AudioWorkletProcessor {
       }
     }
 
+    if (this.endedFlag) {
+      this.endedFlag = false
+      this.port.postMessage({ type: 'ended' })
+    }
     if (++this.blockCount >= 4) {
       // every 512 samples ≈ 86 Hz
       this.blockCount = 0
