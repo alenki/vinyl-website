@@ -1,0 +1,48 @@
+- generic [ref=f4e2]:
+  - main [ref=f4e4]:
+    - generic:
+      - heading "ESOES & ÉLI" [level=1]
+      - paragraph: Гаснет Свет · 2026
+    - slider "Пластинка. Тяните, чтобы скретчить; стрелки подталкивают; пробел запускает и останавливает." [ref=f4e6]:
+      - generic [ref=f4e9]:
+        - img [ref=f4e15]:
+          - generic [ref=f4e21]: МЕРИДИАН ГРАМОФОН
+          - generic [ref=f4e22]: ДОЛГОИГРАЮЩАЯ ПЛАСТИНКА · МИКРОГРУВ
+          - generic [ref=f4e23]: ГАСНЕТ СВЕТ
+          - generic [ref=f4e24]: ESOES & ÉLI
+          - generic [ref=f4e25]: 1. ГАСНЕТ СВЕТ (2:56)
+          - generic [ref=f4e26]: ЗАПИСЬ 2026 ГОДА
+          - generic [ref=f4e27]: МЕР-4017
+          - generic [ref=f4e28]: 33⅓ ОБ/МИН
+          - generic [ref=f4e29]: СТОРОНА 1
+          - generic [ref=f4e30]: МОСКВА · 2026 · СТЕРЕО
+        - img [ref=f4e39]:
+          - generic [ref=f4e45]: МЕРИДИАН ГРАМОФОН
+          - generic [ref=f4e46]: ДОЛГОИГРАЮЩАЯ ПЛАСТИНКА · МИКРОГРУВ
+          - generic [ref=f4e47]: ГАСНЕТ СВЕТ
+          - generic [ref=f4e48]: ESOES & ÉLI
+          - generic [ref=f4e49]: БЕЗ ЗАПИСИ
+          - generic [ref=f4e50]: ОБЕРЕГАЙТЕ ОТ ПЫЛИ И ТЕПЛА
+          - generic [ref=f4e51]: МЕР-4017
+          - generic [ref=f4e52]: 33⅓ ОБ/МИН
+          - generic [ref=f4e53]: СТОРОНА 2
+          - generic [ref=f4e54]: МОСКВА · 2026 · СТЕРЕО
+    - generic [ref=f4e58]:
+      - slider "Позиция в треке" [disabled] [ref=f4e59]
+      - generic [ref=f4e61]:
+        - button "Пуск" [ref=f4e62] [cursor=pointer]
+        - generic [ref=f4e65]:
+          - generic [ref=f4e66]: Гаснет Свет
+          - generic [ref=f4e67]:
+            - text: 0:00
+            - generic [ref=f4e68]: / 2:56
+      - list [ref=f4e69]:
+        - listitem [ref=f4e70]:
+          - button "A1 Гаснет Свет 2:56" [ref=f4e71] [cursor=pointer]:
+            - generic [ref=f4e72]: A1
+            - generic "ESOES & ÉLI · Гаснет Свет" [ref=f4e73]: Гаснет Свет
+            - generic [ref=f4e74]: 2:56
+  - button "Слушать «Гаснет Свет», ESOES & ÉLI" [active] [ref=f4e76] [cursor=pointer]:
+    - generic [ref=f4e77]: Гаснет Свет
+    - generic [ref=f4e78]: ESOES & ÉLI
+    - generic [ref=f4e79]: слушать

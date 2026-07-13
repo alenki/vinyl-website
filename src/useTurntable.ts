@@ -325,20 +325,53 @@ export function useTurntable(
     [platter, markInteracted],
   )
 
+  /**
+   * Jump the playhead to a fraction (0..1) of the track — the progress bar as a
+   * position control. Moves the audio, the tonearm and the time readout in one
+   * step; there's no live scrub-audio (the record itself is where you scratch),
+   * so seeking stays clean. Clamps a hair shy of the run-out because at exactly
+   * 1.0 the worklet's `frame % length` wraps the seek back to the very start.
+   */
+  const seek = useCallback(
+    (fraction: number) => {
+      if (phaseRef.current !== 'playing') return
+      markInteracted()
+      const dur = durationRef.current
+      const f = Math.max(0, Math.min(dur > 0 ? 1 - 0.06 / dur : 0, fraction))
+      progressRef.current = f
+      // leaving the run-out re-arms playback: a finished record resumes from the
+      // new spot when the motor is next started, instead of pinning at the end
+      endedRef.current = false
+      deck.seekToSeconds(f * dur)
+      idleSince.current = performance.now()
+      setPartial({ progress: f, elapsed: f * dur })
+    },
+    [markInteracted, setPartial],
+  )
+
   // public controls
 
   const startBoot = useCallback(async () => {
     setPartial({ phase: 'pressing' })
     phaseRef.current = 'pressing'
-    await deck.init()
-    const ok = await deck.loadTrack(TRACKS[0])
-    if (!ok) return
-    deck.setNeedle(true)
-    motorRef.current = true
-    platter.motorOn = true
-    phaseRef.current = 'playing'
-    idleSince.current = performance.now()
-    setPartial({ phase: 'playing', motorOn: true })
+    try {
+      await deck.init()
+      const ok = await deck.loadTrack(TRACKS[0])
+      if (!ok) throw new Error('track failed to load')
+      deck.setNeedle(true)
+      motorRef.current = true
+      platter.motorOn = true
+      phaseRef.current = 'playing'
+      idleSince.current = performance.now()
+      setPartial({ phase: 'playing', motorOn: true })
+    } catch (err) {
+      // Audio couldn't start (e.g. a browser with no usable audio at all). Roll
+      // the sleeve back so it's not stuck lifted and the listener can retry,
+      // instead of leaving an uncaught rejection and a dead deck.
+      console.error('[turntable] audio failed to start:', err)
+      phaseRef.current = 'boot'
+      setPartial({ phase: 'boot' })
+    }
   }, [platter, setPartial])
 
   const toggleMotor = useCallback(() => {
@@ -416,6 +449,7 @@ export function useTurntable(
     onPointerMove,
     endGrab,
     nudge,
+    seek,
     startBoot,
     toggleMotor,
     selectTrack,
