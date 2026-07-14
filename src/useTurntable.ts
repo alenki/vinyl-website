@@ -128,7 +128,11 @@ export function useTurntable(
       // rotate the record
       const rotor = rotorRef.current
       if (rotor) {
-        const deg = (platter.angle * 180) / Math.PI
+        // rotate(k·360 + x) === rotate(x): platter.angle is an unbounded
+        // accumulator (~3.49 rad/s forever), so wrap the emitted value to keep
+        // the number the compositor sees small and precise across long sessions.
+        // platter.angle itself is untouched — physics/audio read omega, not angle.
+        const deg = ((platter.angle * 180) / Math.PI) % 360
         rotor.style.transform = `rotate(${deg}deg)`
       }
 

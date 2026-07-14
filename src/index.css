@@ -298,6 +298,18 @@ button {
     radial-gradient(1.2px 1.2px at 45% 12%, rgba(244, 239, 227, 0.4), transparent 60%);
 }
 
+/* The room's light overlays (sheen / glint / hotspot) are fixed — they don't
+   spin with the record. Flatten them into one persistently-promoted layer so
+   the GPU rasterizes them once and composites a single cached quad over the
+   moving rotor each frame, instead of several full-size quads (overdraw). */
+.fixed-light {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
 .sheen {
   position: absolute;
   inset: 0;
@@ -324,7 +336,10 @@ button {
   inset: 0;
   border-radius: 50%;
   pointer-events: none;
-  mix-blend-mode: screen;
+  /* pure-white specular streak: over the opaque wax, screen-blend is identical
+     to normal compositing (screen(1,Cb) = Cb + 1 − Cb = 1), so we drop
+     mix-blend-mode to avoid a per-frame backdrop-readback render pass against
+     the spinning rotor — same look, far cheaper on weak GPUs. */
   background: conic-gradient(
     from -32deg,
     transparent 0deg,

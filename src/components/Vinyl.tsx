@@ -123,10 +123,14 @@ function VinylFaceImpl({ side, rotorRef, held, dusty }: VinylFaceProps) {
         </div>
         <div className="dust-layer" style={{ opacity: dusty ? 1 : 0 }} />
       </div>
-      {/* fixed light: the room's reflection doesn't spin with the record */}
-      <div className="sheen" />
-      <div className="glint" />
-      <div className="hotspot" />
+      {/* fixed light: the room's reflection doesn't spin with the record.
+          Grouped into one promoted layer so it composites as a single cached
+          quad over the spinning rotor (see .fixed-light in index.css). */}
+      <div className="fixed-light">
+        <div className="sheen" />
+        <div className="glint" />
+        <div className="hotspot" />
+      </div>
     </div>
   )
 }
