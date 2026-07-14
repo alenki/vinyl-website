@@ -1,0 +1,49 @@
+- generic [ref=f3e2]:
+  - main [ref=f3e4]:
+    - generic:
+      - heading "ESOES & ÉLI" [level=1]
+      - paragraph: Гаснет Свет · 2026
+    - slider "Пластинка. Тяните, чтобы скретчить; стрелки подталкивают; пробел запускает и останавливает." [ref=f3e6]:
+      - generic [ref=f3e9]:
+        - img [ref=f3e15]:
+          - generic [ref=f3e21]: МЕРИДИАН ГРАМОФОН
+          - generic [ref=f3e22]: ДОЛГОИГРАЮЩАЯ ПЛАСТИНКА · МИКРОГРУВ
+          - generic [ref=f3e23]: ГАСНЕТ СВЕТ
+          - generic [ref=f3e24]: ESOES & ÉLI
+          - generic [ref=f3e25]: 1. ГАСНЕТ СВЕТ (2:56)
+          - generic [ref=f3e26]: ЗАПИСЬ 2026 ГОДА
+          - generic [ref=f3e27]: МЕР-4017
+          - generic [ref=f3e28]: 33⅓ ОБ/МИН
+          - generic [ref=f3e29]: СТОРОНА 1
+          - generic [ref=f3e30]: МОСКВА · 2026 · СТЕРЕО
+        - img [ref=f3e39]:
+          - generic [ref=f3e45]: МЕРИДИАН ГРАМОФОН
+          - generic [ref=f3e46]: ДОЛГОИГРАЮЩАЯ ПЛАСТИНКА · МИКРОГРУВ
+          - generic [ref=f3e47]: ГАСНЕТ СВЕТ
+          - generic [ref=f3e48]: ESOES & ÉLI
+          - generic [ref=f3e49]: БЕЗ ЗАПИСИ
+          - generic [ref=f3e50]: ОБЕРЕГАЙТЕ ОТ ПЫЛИ И ТЕПЛА
+          - generic [ref=f3e51]: МЕР-4017
+          - generic [ref=f3e52]: 33⅓ ОБ/МИН
+          - generic [ref=f3e53]: СТОРОНА 2
+          - generic [ref=f3e54]: МОСКВА · 2026 · СТЕРЕО
+    - generic [ref=f3e58]:
+      - slider "Позиция в треке" [ref=f3e59] [cursor=pointer]
+      - generic [ref=f3e61]:
+        - button "Стоп" [pressed] [ref=f3e83] [cursor=pointer]
+        - generic [ref=f3e65]:
+          - generic [ref=f3e66]: Гаснет Свет
+          - generic [ref=f3e67]:
+            - text: 0:00
+            - generic [ref=f3e68]: / 2:56
+      - list [ref=f3e69]:
+        - listitem [ref=f3e70]:
+          - button "A1 Гаснет Свет 2:56" [ref=f3e71] [cursor=pointer]:
+            - generic [ref=f3e72]: A1
+            - generic "ESOES & ÉLI · Гаснет Свет" [ref=f3e73]: Гаснет Свет
+            - generic [ref=f3e74]: 2:56
+    - generic [ref=f3e75]: Сейчас играет «Гаснет Свет», 33⅓ об/мин
+  - button [disabled]:
+    - generic: Гаснет Свет
+    - generic: ESOES & ÉLI
+    - generic: слушать

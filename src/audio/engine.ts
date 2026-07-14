@@ -1,14 +1,96 @@
 import { renderTrack, type TrackDef } from './composer'
 
+// Old iOS/Android (and any browser missing unprefixed Web Audio) expose only the
+// webkit-prefixed constructor; a browser could also lack Web Audio entirely, so
+// this may be undefined and we fall back to a bare <audio> element.
+const AudioCtx: typeof AudioContext | undefined =
+  typeof window !== 'undefined'
+    ? window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    : undefined
+
+/** The full AudioWorklet path exists (iOS Safari 14.5+, Chrome 66+, etc.). */
+function workletUsable(ctx: AudioContext): boolean {
+  return (
+    typeof AudioWorkletNode !== 'undefined' &&
+    !!ctx.audioWorklet &&
+    typeof ctx.audioWorklet.addModule === 'function'
+  )
+}
+
+/** Reject if a promise (an in-app WKWebView addModule can hang) outlives `ms`. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error('audio worklet module load timed out')), ms)
+    p.then(
+      (v) => {
+        clearTimeout(id)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(id)
+        reject(e)
+      },
+    )
+  })
+}
+
+/** iPhone/iPad, including iPadOS 13+ which reports itself as desktop Safari. */
+function isAppleTouch(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  return /iP(hone|od|ad)/.test(ua) || (/Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document)
+}
+
+// A short, genuinely-silent WAV as a data URI (built once). On iOS, an actually-
+// playing HTMLMediaElement — even a silent one — is the only web-side lever that
+// promotes a WKWebView's audio session onto the media channel, so a Web Audio
+// graph becomes audible inside in-app browsers (Telegram, Instagram) and with the
+// hardware silent switch on. See WebKit #167788 / #237322.
+let cachedSilentClip = ''
+function silentClip(): string {
+  if (cachedSilentClip) return cachedSilentClip
+  const rate = 8000
+  const samples = Math.floor(rate * 0.25)
+  const size = 44 + samples
+  const buf = new ArrayBuffer(size)
+  const dv = new DataView(buf)
+  const ascii = (o: number, s: string) => {
+    for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i))
+  }
+  ascii(0, 'RIFF')
+  dv.setUint32(4, size - 8, true)
+  ascii(8, 'WAVE')
+  ascii(12, 'fmt ')
+  dv.setUint32(16, 16, true) // PCM header size
+  dv.setUint16(20, 1, true) // format = PCM
+  dv.setUint16(22, 1, true) // mono
+  dv.setUint32(24, rate, true)
+  dv.setUint32(28, rate, true) // byte rate (8-bit mono)
+  dv.setUint16(32, 1, true) // block align
+  dv.setUint16(34, 8, true) // bits per sample
+  ascii(36, 'data')
+  dv.setUint32(40, samples, true)
+  for (let i = 0; i < samples; i++) dv.setUint8(44 + i, 128) // 8-bit PCM: 128 = silence
+  const u8 = new Uint8Array(buf)
+  let bin = ''
+  for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i])
+  cachedSilentClip = 'data:audio/wav;base64,' + btoa(bin)
+  return cachedSilentClip
+}
+
 /**
  * The deck. Owns the realtime audio graph around the turntable worklet:
  *
- *   worklet out0 (music) → scratch filter → needle gain → warmth chain
- *   mechanical sfx → compressor (joins the chain, skips the shaper)
+ *   worklet out0 (music) → scratch filter → needle gain → analyser (VU tap)
+ *                        → master → destination
+ *   mechanical sfx → master (joins at the output, clear of the music)
  *
- * warmth chain: low shelf → mid dip → high shelf → tanh shaper → compressor
- * → analyser → master → destination. The platter physics drives `setRate`
- * every frame; everything audible follows from that one number.
+ * The music path is deliberately flat: the artist hands us a finished master,
+ * so nothing here re-EQs, drives, or compresses it. The scratch filter is a
+ * velocity-mapped lowpass that only bites when you scrub slowly (fully open at
+ * speed); the needle gain is the stylus gate. The platter physics drives
+ * `setRate` every frame; everything audible follows from that one number.
  *
  * (The worklet can also emit procedural surface crackle on a second output;
  * the deck leaves it unwired — this pressing plays clean, no background static.)
@@ -26,11 +108,23 @@ export class TurntableAudio {
   private lastCutoff = 0
   private renderGeneration = 0
 
+  // Fallback path. When the AudioWorklet is unavailable (old iOS < 14.5) or its
+  // module fails to load, the record plays through a plain <audio> element
+  // instead — no scratch/reverse, but the music plays and grabbing still
+  // silences it instantly (pause). `primer` is a silent looping element that
+  // keeps the iOS audio session on the audible channel (see silentClip()).
+  private mode: 'worklet' | 'element' = 'worklet'
+  private initialized = false
+  private music: HTMLAudioElement | null = null
+  private primer: HTMLAudioElement | null = null
+  private needleDown = false
+  private trackLoaded = false // a real (non-silent) src is on the music element
+
   onPosition: ((seconds: number, duration: number) => void) | null = null
   onEnded: (() => void) | null = null
 
   get ready() {
-    return this.worklet !== null
+    return this.mode === 'element' ? this.music !== null : this.worklet !== null
   }
 
   get sampleRate() {
@@ -39,11 +133,33 @@ export class TurntableAudio {
 
   /** Must be called from a user gesture (autoplay policy). Idempotent. */
   async init(): Promise<void> {
-    if (this.ctx) {
-      if (this.ctx.state !== 'running') await this.ctx.resume()
+    // Re-entry (e.g. changing tracks): keep the session promoted and the
+    // context awake, then bail — the graph/element is already built.
+    if (this.initialized) {
+      this.promoteAudioSession()
+      this.startPrimer()
+      if (this.ctx && this.ctx.state !== 'running') await this.ctx.resume()
       return
     }
-    const ctx = new AudioContext({ latencyHint: 'interactive' })
+
+    // Everything up to the first `await` runs inside the click gesture. Promote
+    // the audio session FIRST, synchronously, so it takes hold while the gesture
+    // is still current — this is what makes sound audible in Telegram / in-app
+    // WKWebViews and with the iOS silent switch on.
+    this.promoteAudioSession()
+    this.startPrimer()
+
+    // No Web Audio, or no AudioWorklet (old iOS < 14.5): play the record through
+    // a plain <audio> element. It needs no worklet and, being a real media
+    // element, is audible where bare Web Audio is silenced. This branch is
+    // reached synchronously, so the element is unlocked inside the gesture.
+    if (!AudioCtx || typeof AudioWorkletNode === 'undefined') {
+      this.startElementMode()
+      this.initialized = true
+      return
+    }
+
+    const ctx = new AudioCtx({ latencyHint: 'interactive' })
     this.ctx = ctx
     // resume synchronously inside the gesture, before any await (iOS)
     void ctx.resume()
@@ -57,8 +173,23 @@ export class TurntableAudio {
       if (!document.hidden) revive()
     })
 
-    await ctx.audioWorklet.addModule(`${import.meta.env.BASE_URL}turntable-processor.js`)
+    try {
+      if (!workletUsable(ctx)) throw new Error('AudioWorklet unavailable')
+      // A WKWebView can hang on addModule; fall back rather than wait forever.
+      await withTimeout(ctx.audioWorklet.addModule(`${import.meta.env.BASE_URL}turntable-processor.js`), 8000)
+      this.buildWorkletGraph(ctx)
+      this.mode = 'worklet'
+    } catch (err) {
+      console.warn('[deck] AudioWorklet path unavailable — using <audio> fallback:', err)
+      this.startElementMode()
+    }
 
+    if (this.mode === 'worklet' && ctx.state !== 'running') await ctx.resume()
+    this.initialized = true
+  }
+
+  /** Wire the realtime worklet graph (the full-fidelity, scratchable path). */
+  private buildWorkletGraph(ctx: AudioContext) {
     const worklet = new AudioWorkletNode(ctx, 'turntable', {
       numberOfInputs: 0,
       numberOfOutputs: 1,
@@ -84,41 +215,12 @@ export class TurntableAudio {
     worklet.connect(scratchFilter, 0)
     scratchFilter.connect(needleGain)
 
-    // warmth chain
-    const lowShelf = ctx.createBiquadFilter()
-    lowShelf.type = 'lowshelf'
-    lowShelf.frequency.value = 110
-    lowShelf.gain.value = 2
-
-    const midDip = ctx.createBiquadFilter()
-    midDip.type = 'peaking'
-    midDip.frequency.value = 3800
-    midDip.Q.value = 0.7
-    midDip.gain.value = -1.5
-
-    const highShelf = ctx.createBiquadFilter()
-    highShelf.type = 'highshelf'
-    highShelf.frequency.value = 9500
-    highShelf.gain.value = -3
-
-    const shaper = ctx.createWaveShaper()
-    const curve = new Float32Array(4096)
-    for (let i = 0; i < curve.length; i++) {
-      const x = (i / (curve.length - 1)) * 2 - 1
-      // gentler tape drive — warmth without grit (the composer master already
-      // glued the mix, so this only needs to round the very peaks)
-      curve[i] = Math.tanh(x * 1.25) / Math.tanh(1.25)
-    }
-    shaper.curve = curve
-    shaper.oversample = '4x'
-
-    const comp = ctx.createDynamicsCompressor()
-    comp.threshold.value = -20
-    comp.knee.value = 18
-    comp.ratio.value = 1.8
-    comp.attack.value = 0.014
-    comp.release.value = 0.3
-
+    // The music stays flat — the artist's master is reproduced as-is: no EQ,
+    // no tape-drive shaping, no compression. The only things between the groove
+    // and the speakers are the scratch lowpass (transparent at speed) and the
+    // stylus gate above, then a transparent VU tap. (An earlier "warmth chain"
+    // shelved the bass up and glued the mix louder — that re-mastered the
+    // artist's track, so it's gone.)
     const analyser = ctx.createAnalyser()
     analyser.fftSize = 1024
     analyser.smoothingTimeConstant = 0.5
@@ -126,24 +228,90 @@ export class TurntableAudio {
     this.analyserData = new Uint8Array(analyser.fftSize)
 
     const master = ctx.createGain()
-    master.gain.value = 0.85
+    master.gain.value = 1
 
-    needleGain.connect(lowShelf)
-    lowShelf.connect(midDip)
-    midDip.connect(highShelf)
-    highShelf.connect(shaper)
-    shaper.connect(comp)
-    comp.connect(analyser)
+    // music: stylus gate → VU tap → master → out (the analyser passes audio
+    // through unchanged, so the record reaches the speakers untouched)
+    needleGain.connect(analyser)
     analyser.connect(master)
     master.connect(ctx.destination)
 
-    // mechanical sfx (needle drops, switch clunks) skip the shaper
+    // mechanical sfx (needle drops, switch clunks) join at the master, so they
+    // stay audible but never colour or compress the music — and no longer move
+    // the VU meter, which now reads the record itself
     const sfxBus = ctx.createGain()
     sfxBus.gain.value = 0.9
     this.sfxBus = sfxBus
-    sfxBus.connect(comp)
+    sfxBus.connect(master)
+  }
 
-    if (ctx.state !== 'running') await ctx.resume()
+  /**
+   * Opt the page's audio session onto the media/"playback" channel so Web Audio
+   * ignores the iOS silent switch (iOS 17+; a no-op elsewhere). The silent
+   * primer below covers older iOS that lacks this API.
+   */
+  private promoteAudioSession() {
+    try {
+      const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession
+      if (session && session.type !== 'playback') session.type = 'playback'
+    } catch {
+      /* not supported */
+    }
+  }
+
+  /**
+   * Keep a short silent media element looping (iOS only). Actually playing an
+   * HTMLMediaElement is what flips a WKWebView's audio session to the audible
+   * channel, so the worklet — or the <audio> fallback — is heard inside Telegram
+   * and with the silent switch on. Paused while the page is hidden.
+   */
+  private startPrimer() {
+    if (!isAppleTouch()) return
+    let a = this.primer
+    if (!a) {
+      a = new Audio(silentClip())
+      a.loop = true
+      a.setAttribute('playsinline', '')
+      a.setAttribute('webkit-playsinline', '')
+      this.primer = a
+      document.addEventListener('visibilitychange', () => {
+        const el = this.primer
+        if (!el) return
+        if (document.hidden) el.pause()
+        else void el.play().catch(() => {})
+      })
+    }
+    void a.play().catch(() => {})
+  }
+
+  /** Switch to the <audio> fallback and unlock the element inside the gesture. */
+  private startElementMode() {
+    if (this.mode !== 'element') console.warn('[deck] AudioWorklet unavailable — playing via <audio> fallback')
+    this.mode = 'element'
+    const a = this.ensureMusicElement()
+    // The first play() must happen in a user gesture on strict iOS; bless the
+    // element now with the silent clip. loadTrack swaps in the real src, and
+    // `trackLoaded` keeps this priming from firing onEnded/onPosition.
+    if (!a.src) a.src = silentClip()
+    void a.play().catch(() => {})
+  }
+
+  private ensureMusicElement(): HTMLAudioElement {
+    if (this.music) return this.music
+    const a = new Audio()
+    a.preload = 'auto'
+    a.setAttribute('playsinline', '')
+    a.setAttribute('webkit-playsinline', '')
+    const emitPos = () => {
+      if (this.trackLoaded && a.duration > 0.1) this.onPosition?.(a.currentTime, a.duration)
+    }
+    a.addEventListener('timeupdate', emitPos)
+    a.addEventListener('durationchange', emitPos)
+    a.addEventListener('ended', () => {
+      if (this.trackLoaded) this.onEnded?.()
+    })
+    this.music = a
+    return a
   }
 
   /**
@@ -151,6 +319,7 @@ export class TurntableAudio {
    * Guarded by a generation counter — a stale render never wins.
    */
   async loadTrack(def: TrackDef): Promise<boolean> {
+    if (this.mode === 'element') return this.loadTrackElement(def)
     if (!this.worklet || !this.ctx) throw new Error('audio not initialized')
     const generation = ++this.renderGeneration
     // A `src` track is a pre-recorded file we decode; otherwise we synthesize
@@ -188,10 +357,30 @@ export class TurntableAudio {
     return await this.ctx.decodeAudioData(bytes)
   }
 
+  /** Fallback loader: point the <audio> element at the recorded file. */
+  private async loadTrackElement(def: TrackDef): Promise<boolean> {
+    const generation = ++this.renderGeneration
+    if (!def.src) {
+      // The element fallback can only play recorded files; the synth path
+      // ("cut the lacquer") needs the worklet. No current track hits this.
+      console.warn(`[deck] "${def.id}" has no recorded src; the <audio> fallback can't synthesize it`)
+      return false
+    }
+    const a = this.ensureMusicElement()
+    this.trackLoaded = false
+    a.loop = false // a recorded song ends at the run-out (onEnded), like the worklet path
+    a.src = def.src
+    a.load()
+    if (generation !== this.renderGeneration) return false
+    this.trackLoaded = true
+    return true
+  }
+
   /** Signed playback rate; 1 = 33⅓ RPM. Called every frame by the physics. */
   setRate(rate: number) {
-    if (!this.ctx || !this.worklet) return
     this.currentRate = rate
+    if (this.mode === 'element') return this.setRateElement(rate)
+    if (!this.ctx || !this.worklet) return
     if (Math.abs(rate - this.lastSentRate) > 0.0004) {
       this.lastSentRate = rate
       this.worklet.port.postMessage({ type: 'rate', value: rate })
@@ -210,7 +399,32 @@ export class TurntableAudio {
     }
   }
 
+  /**
+   * Fallback rate handling: a plain <audio> element can't scrub or reverse, so
+   * the signed platter rate collapses to play/pause + a coarse speed. Planting a
+   * finger (rate → 0) or lifting the stylus pauses instantly — the essential
+   * "grab silences the record" feel survives; reverse-scratch audio does not.
+   */
+  private setRateElement(rate: number) {
+    const a = this.music
+    if (!a || !this.trackLoaded) return
+    const shouldPlay = this.needleDown && rate > 0.06 // reverse/stopped → pause
+    if (!shouldPlay) {
+      if (!a.paused) a.pause()
+      return
+    }
+    const pr = Math.min(2, Math.max(0.5, Math.abs(rate))) // Safari mutes outside ~[0.5, 2]
+    if (Math.abs(a.playbackRate - pr) > 0.02) a.playbackRate = pr
+    if (a.paused) void a.play().catch(() => {})
+  }
+
   setNeedle(down: boolean) {
+    this.needleDown = down
+    if (this.mode === 'element') {
+      // lift = immediate silence; drop lets the next setRate resume playback
+      if (!down && this.music && !this.music.paused) this.music.pause()
+      return
+    }
     if (!this.ctx || !this.needleGain) return
     const t = this.ctx.currentTime
     if (down) {
@@ -228,6 +442,16 @@ export class TurntableAudio {
   }
 
   seekToSeconds(seconds: number) {
+    if (this.mode === 'element') {
+      if (this.music && this.trackLoaded) {
+        try {
+          this.music.currentTime = seconds
+        } catch {
+          /* not seekable yet */
+        }
+      }
+      return
+    }
     if (!this.ctx || !this.worklet) return
     this.worklet.port.postMessage({ type: 'seek', frame: Math.floor(seconds * this.ctx.sampleRate) })
   }

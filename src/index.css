@@ -189,10 +189,20 @@ button {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: 50%;
 }
+/* Nudge each face 1px proud of the flipper plane along its own normal so the
+   two labels are never coplanar. The B-side rotor is a will-change-composited
+   layer that escapes the face's backface cull; with both faces sitting at z=0
+   the ochre (A) and blue (B) labels z-fight and B intermittently wins — the
+   "sticker turns blue" bug. The depth offset makes the front face always
+   occlude the back one (and reads as real record thickness at the edge). */
+.face.a {
+  transform: translateZ(1px);
+}
 .face.b {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
 }
 
 .record {
@@ -435,20 +445,66 @@ button {
   animation: rise 0.7s var(--ease) 0.08s both;
 }
 
+/* A hair-thin position control. The visible groove line stays 2px; a taller
+   transparent pad around it makes the bar easy to grab, and the knob fades in
+   only while hovered / focused / scrubbing — at rest the console is still just
+   one quiet line. */
 .progress {
+  position: relative;
   width: 100%;
+  padding: 9px 0;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.progress[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.55;
+}
+.progress-track {
+  display: block;
   height: 2px;
   background: var(--line);
-  overflow: hidden;
   border-radius: 2px;
+  overflow: hidden;
 }
-.progress span {
+.progress-fill {
   display: block;
   height: 100%;
   width: 100%;
   background: var(--accent);
   transform-origin: left center;
   transition: transform 0.2s linear;
+}
+.progress-knob {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-50%) scale(0);
+  transition: transform 0.16s var(--ease);
+  pointer-events: none;
+}
+.progress:hover .progress-knob,
+.progress:focus-visible .progress-knob,
+.progress.scrubbing .progress-knob {
+  transform: translateY(-50%) scale(1);
+}
+/* the knob is the focus/drag affordance — skip the box outline on the thin bar */
+.progress:focus-visible {
+  outline: none;
+}
+.progress:focus-visible .progress-knob {
+  box-shadow: 0 0 0 3px rgba(138, 95, 29, 0.26);
+}
+/* while dragging, the fill and knob track the finger exactly (no catch-up ease) */
+.progress.scrubbing .progress-fill,
+.progress.scrubbing .progress-knob {
+  transition: none;
 }
 
 .transport {

@@ -36,6 +36,13 @@ export default function App() {
   const [zoneSize, setZoneSize] = useState(560)
   const [jolt, setJolt] = useState(false)
 
+  // progress-bar seeking: `scrub` is the fraction being dragged (null when idle,
+  // drives the fill/knob live); scrubRef mirrors it so pointerup can commit the
+  // final position without waiting on a state flush
+  const progressEl = useRef<HTMLDivElement>(null)
+  const scrubRef = useRef<number | null>(null)
+  const [scrub, setScrub] = useState<number | null>(null)
+
   // the physics loop rotates whichever face is showing; we keep both refs and
   // point the hook at the visible one
   const activeRotor = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement | null>
@@ -87,9 +94,88 @@ export default function App() {
     [tt],
   )
 
+  // progress bar as a seek control — only live once a track is on the platter
+  const seekable = state.phase === 'playing'
+
+  const fractionAt = useCallback((clientX: number) => {
+    const el = progressEl.current
+    if (!el) return 0
+    const r = el.getBoundingClientRect()
+    if (r.width <= 0) return 0
+    return Math.max(0, Math.min(1, (clientX - r.left) / r.width))
+  }, [])
+
+  const onProgressDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!seekable || e.button !== 0) return
+      e.currentTarget.setPointerCapture?.(e.pointerId)
+      const f = fractionAt(e.clientX)
+      scrubRef.current = f
+      setScrub(f)
+    },
+    [seekable, fractionAt],
+  )
+
+  const onProgressMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (scrubRef.current === null) return
+      const f = fractionAt(e.clientX)
+      scrubRef.current = f
+      setScrub(f)
+    },
+    [fractionAt],
+  )
+
+  // commit on release / cancel / lost-capture, at the last dragged fraction
+  const onProgressUp = useCallback(() => {
+    if (scrubRef.current === null) return
+    tt.seek(scrubRef.current)
+    scrubRef.current = null
+    setScrub(null)
+  }, [tt])
+
+  const onProgressKey = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!seekable) return
+      const dur = state.duration || 1
+      const cur = Math.max(0, Math.min(1, state.progress))
+      const stepS = e.shiftKey ? 15 : 5 // seconds per arrow press
+      let f: number | null = null
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'ArrowDown':
+          f = cur - stepS / dur
+          break
+        case 'ArrowRight':
+        case 'ArrowUp':
+          f = cur + stepS / dur
+          break
+        case 'PageDown':
+          f = cur - 30 / dur
+          break
+        case 'PageUp':
+          f = cur + 30 / dur
+          break
+        case 'Home':
+          f = 0
+          break
+        case 'End':
+          f = 1
+          break
+      }
+      if (f !== null) {
+        e.preventDefault()
+        tt.seek(Math.max(0, Math.min(1, f)))
+      }
+    },
+    [seekable, state.duration, state.progress, tt],
+  )
+
   const booting = state.phase === 'boot'
   const current = TRACKS[state.trackIndex]
   const playing = state.phase === 'playing' && state.motorOn
+  // fill/knob follow the finger while dragging, else the live playhead
+  const shownProgress = scrub !== null ? scrub : Math.max(0, Math.min(1, state.progress))
 
   return (
     <>
@@ -155,8 +241,28 @@ export default function App() {
 
         {/* console */}
         <footer className="console">
-          <div className="progress" aria-hidden="true">
-            <span style={{ transform: `scaleX(${Math.max(0, Math.min(1, state.progress))})` }} />
+          <div
+            ref={progressEl}
+            className={`progress${scrub !== null ? ' scrubbing' : ''}`}
+            role="slider"
+            tabIndex={seekable ? 0 : -1}
+            aria-label="Позиция в треке"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(shownProgress * 100)}
+            aria-valuetext={`${fmt(shownProgress * state.duration)} из ${fmt(state.duration)}`}
+            aria-disabled={seekable ? undefined : true}
+            onPointerDown={onProgressDown}
+            onPointerMove={onProgressMove}
+            onPointerUp={onProgressUp}
+            onPointerCancel={onProgressUp}
+            onLostPointerCapture={onProgressUp}
+            onKeyDown={onProgressKey}
+          >
+            <span className="progress-track">
+              <span className="progress-fill" style={{ transform: `scaleX(${shownProgress})` }} />
+            </span>
+            <span className="progress-knob" style={{ left: `${shownProgress * 100}%` }} />
           </div>
 
           <div className="transport">
